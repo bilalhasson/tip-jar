@@ -4,16 +4,25 @@ App setup and route handlers only. Stripe/business logic lives in
 `app.stripe_client`; request models in `app.schemas`; page markup in templates/.
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 
-from app import config, stripe_client
+from app import config, db, stripe_client, tips
 from app.schemas import CheckoutRequest
 
 stripe_client.configure()
 
-app = FastAPI(title="Tip Jar", docs_url=None, redoc_url=None)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db.create_db_and_tables()
+    yield
+
+
+app = FastAPI(title="Tip Jar", docs_url=None, redoc_url=None, lifespan=lifespan)
 
 # The widget is embedded on arbitrary third-party sites, so the browser makes a
 # cross-origin POST to /create-checkout-session. No cookies/credentials are used,
@@ -48,6 +57,18 @@ def create_checkout_session(req: CheckoutRequest, request: Request):
     except stripe_client.CheckoutError:
         raise HTTPException(status_code=502, detail="Could not create checkout session.")
     return {"url": url}
+
+
+@app.post("/stripe-webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()  # raw body is required for signature verification
+    sig = request.headers.get("stripe-signature", "")
+    try:
+        event = stripe_client.construct_webhook_event(payload, sig)
+    except stripe_client.InvalidSignature:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    tips.handle_event(event)
+    return {"received": True}  # ack promptly; the webhook is the source of truth
 
 
 @app.get("/widget.js")

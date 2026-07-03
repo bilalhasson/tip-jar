@@ -16,8 +16,14 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 
 # --- Stripe ---
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 # Pin the API version so Stripe's behaviour stays stable across their releases.
 STRIPE_API_VERSION = "2026-06-24.dahlia"
+
+# --- Database ---
+# Railway injects DATABASE_URL for its Postgres plugin; locally we fall back to
+# a SQLite file (see app.db).
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 # --- Tips ---
 CURRENCY = os.environ.get("CURRENCY", "gbp").lower()

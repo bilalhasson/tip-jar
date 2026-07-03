@@ -4,6 +4,7 @@ Keeps the API wiring and Checkout-session business logic out of the route
 handlers. Routes translate the exceptions below into HTTP responses.
 """
 
+import json
 import math
 
 import stripe
@@ -17,6 +18,10 @@ class InvalidAmount(ValueError):
 
 class CheckoutError(Exception):
     """Stripe rejected the session request — maps to HTTP 502."""
+
+
+class InvalidSignature(Exception):
+    """Webhook payload failed signature verification — maps to HTTP 400."""
 
 
 def configure() -> None:
@@ -69,3 +74,18 @@ def create_checkout_session(
         raise CheckoutError from exc
 
     return session.url
+
+
+def construct_webhook_event(payload: bytes, sig_header: str) -> dict:
+    """Verify a webhook's signature and return the event as a plain dict.
+
+    Raises InvalidSignature if the payload is malformed or the signature doesn't
+    match our signing secret — the strong guarantee that the request is really
+    from Stripe and untampered. We return json.loads(payload) rather than the
+    StripeObject so downstream code works with ordinary dict semantics.
+    """
+    try:
+        stripe.Webhook.construct_event(payload, sig_header, config.STRIPE_WEBHOOK_SECRET)
+    except (ValueError, stripe.error.SignatureVerificationError) as exc:
+        raise InvalidSignature from exc
+    return json.loads(payload)
