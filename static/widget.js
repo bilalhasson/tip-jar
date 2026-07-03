@@ -48,10 +48,14 @@
     ".tipjar__amt--on{background:#6366f1;border-color:#6366f1;color:#fff}" +
     ".tipjar__custom{width:100%;padding:.55rem .7rem;font-size:.95rem;margin-bottom:.6rem;" +
     "border:1px solid #d1d5db;border-radius:9px;color:#111827;background:#fff}" +
+    ".tipjar__msg{width:100%;padding:.55rem .7rem;font-size:.95rem;margin-bottom:.6rem;" +
+    "border:1px solid #d1d5db;border-radius:9px;color:#111827;background:#fff;" +
+    "font-family:inherit;resize:vertical;min-height:2.4rem}" +
     ".tipjar__btn{width:100%;padding:.65rem;font-size:1rem;font-weight:600;cursor:pointer;" +
     "border:0;border-radius:9px;background:#111827;color:#fff;transition:.12s}" +
     ".tipjar__btn:hover{background:#374151}" +
     ".tipjar__btn:disabled{opacity:.6;cursor:default}" +
+    ".tipjar :focus-visible{outline:2px solid #6366f1;outline-offset:2px}" +
     ".tipjar__err{color:#b91c1c;font-size:.85rem;margin:.5rem 0 0;min-height:1rem}";
 
   var style = document.createElement("style");
@@ -61,6 +65,8 @@
   // Build the widget.
   var root = document.createElement("div");
   root.className = "tipjar";
+  root.setAttribute("role", "group");
+  root.setAttribute("aria-label", creator ? "Tip " + creator : "Leave a tip");
 
   var title = document.createElement("div");
   title.className = "tipjar__title";
@@ -77,11 +83,16 @@
     b.type = "button";
     b.className = "tipjar__amt" + (amt === selected ? " tipjar__amt--on" : "");
     b.textContent = fmt(amt);
+    b.setAttribute("aria-pressed", amt === selected ? "true" : "false");
     b.addEventListener("click", function () {
       selected = amt;
       custom.value = "";
-      buttons.forEach(function (btn) { btn.classList.remove("tipjar__amt--on"); });
+      buttons.forEach(function (btn) {
+        btn.classList.remove("tipjar__amt--on");
+        btn.setAttribute("aria-pressed", "false");
+      });
       b.classList.add("tipjar__amt--on");
+      b.setAttribute("aria-pressed", "true");
       clearErr();
     });
     buttons.push(b);
@@ -95,14 +106,26 @@
   custom.min = "1";
   custom.step = "1";
   custom.placeholder = "Custom amount (" + (symbol || currency.toUpperCase()) + ")";
+  custom.setAttribute("aria-label", "Custom tip amount");
   custom.addEventListener("input", function () {
     if (custom.value) {
       selected = null;
-      buttons.forEach(function (btn) { btn.classList.remove("tipjar__amt--on"); });
+      buttons.forEach(function (btn) {
+        btn.classList.remove("tipjar__amt--on");
+        btn.setAttribute("aria-pressed", "false");
+      });
     }
     clearErr();
   });
   root.appendChild(custom);
+
+  var msg = document.createElement("textarea");
+  msg.className = "tipjar__msg";
+  msg.rows = 2;
+  msg.maxLength = 200;
+  msg.placeholder = "Say something (optional)";
+  msg.setAttribute("aria-label", "Optional message");
+  root.appendChild(msg);
 
   var btn = document.createElement("button");
   btn.type = "button";
@@ -112,6 +135,7 @@
 
   var err = document.createElement("p");
   err.className = "tipjar__err";
+  err.setAttribute("aria-live", "polite");
   root.appendChild(err);
 
   function clearErr() { err.textContent = ""; }
@@ -138,7 +162,7 @@
     fetch(api + "/create-checkout-session", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: amount, creator: creator }),
+      body: JSON.stringify({ amount: amount, creator: creator, message: msg.value.trim() }),
     })
       .then(function (r) {
         if (!r.ok) return r.json().then(function (j) { throw new Error(j.detail || "Error"); });
