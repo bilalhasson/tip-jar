@@ -79,6 +79,26 @@ def widget_js():
     return FileResponse(config.STATIC_DIR / "widget.js", media_type="application/javascript")
 
 
+@app.get("/favicon.ico")
+def favicon():
+    return FileResponse(config.STATIC_DIR / "favicon.ico", media_type="image/x-icon")
+
+
+@app.get("/favicon.png")
+def favicon_png():
+    return FileResponse(config.STATIC_DIR / "favicon.png", media_type="image/png")
+
+
+@app.get("/apple-touch-icon.png")
+def apple_touch_icon():
+    return FileResponse(config.STATIC_DIR / "apple-touch-icon.png", media_type="image/png")
+
+
+@app.get("/og-image.png")
+def og_image():
+    return FileResponse(config.STATIC_DIR / "og-image.png", media_type="image/png")
+
+
 @app.get("/success", response_class=HTMLResponse)
 def success(request: Request, session_id: str | None = None):
     summary = stripe_client.get_checkout_summary(session_id)
