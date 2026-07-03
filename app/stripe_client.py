@@ -76,6 +76,36 @@ def create_checkout_session(
     return session.url
 
 
+_SYMBOLS = {"gbp": "£", "usd": "$", "eur": "€"}
+
+
+def _format_money(minor: int, currency: str) -> str:
+    prefix = _SYMBOLS.get(currency, (currency or "").upper() + " ")
+    return prefix + "{:,.2f}".format(minor / 100)
+
+
+def get_checkout_summary(session_id: str | None) -> dict | None:
+    """Return {amount_display, creator} for a paid Checkout Session, else None.
+
+    Retrieves the session server-side (authoritative), so the displayed amount
+    can't be spoofed via the URL. Never raises — returns None on a missing id,
+    a Stripe error, or an unpaid session.
+    """
+    if not session_id:
+        return None
+    try:
+        s = stripe.checkout.Session.retrieve(session_id)
+    except stripe.error.StripeError:
+        return None
+    if getattr(s, "payment_status", None) != "paid":
+        return None
+    meta = getattr(s, "metadata", None)
+    return {
+        "amount_display": _format_money(getattr(s, "amount_total", 0) or 0, getattr(s, "currency", "")),
+        "creator": (getattr(meta, "creator", "") if meta else "") or "",
+    }
+
+
 def construct_webhook_event(payload: bytes, sig_header: str) -> dict:
     """Verify a webhook's signature and return the event as a plain dict.
 

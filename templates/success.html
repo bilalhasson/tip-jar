@@ -10,13 +10,18 @@
     .emoji { font-size: 3rem; }
     h1 { margin: .5rem 0; }
     p { color: #4b5563; line-height: 1.6; }
+    .amount { font-weight: 700; color: #111827; }
     a { color: #6366f1; }
   </style>
 </head>
 <body>
   <div class="emoji">☕🎉</div>
   <h1>Thank you for the tip!</h1>
-  <p>Your payment went through. It really means a lot.</p>
+  {% if summary %}
+    <p>Your <span class="amount">{{ summary.amount_display }}</span> tip{% if summary.creator %} to {{ summary.creator }}{% endif %} came through. It really means a lot.</p>
+  {% else %}
+    <p>Your payment went through. It really means a lot.</p>
+  {% endif %}
   <p><a href="/demos/">← back</a></p>
 </body>
 </html>

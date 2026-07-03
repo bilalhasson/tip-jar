@@ -10,11 +10,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from app import config, db, stripe_client, tips
 from app.schemas import CheckoutRequest
 
 stripe_client.configure()
+templates = Jinja2Templates(directory=config.TEMPLATES_DIR)
 
 
 @asynccontextmanager
@@ -78,8 +80,9 @@ def widget_js():
 
 
 @app.get("/success", response_class=HTMLResponse)
-def success():
-    return FileResponse(config.TEMPLATES_DIR / "success.html")
+def success(request: Request, session_id: str | None = None):
+    summary = stripe_client.get_checkout_summary(session_id)
+    return templates.TemplateResponse(request, "success.html", {"summary": summary})
 
 
 @app.get("/cancel", response_class=HTMLResponse)
