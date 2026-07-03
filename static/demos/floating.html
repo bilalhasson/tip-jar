@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tip Jar — floating demo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 42rem; margin: 3rem auto; padding: 0 1rem 40vh; line-height: 1.7; color: #222; }
+    nav { font-size: .9rem; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 10px; overflow-x: auto; font-size: .82rem; }
+  </style>
+</head>
+<body>
+  <nav><a href="/demos/">← all demos</a></nav>
+  <h1>Floating button</h1>
+  <p>Look at the <b>bottom-right corner</b> — a fixed “☕ Tip” pill. Click it to open the tip widget in a popover. On a narrow screen the label collapses to just the icon and the panel becomes a bottom sheet. Scroll around; it stays put.</p>
+  <pre>&lt;script src="/widget.js"
+        data-creator="Bilal"
+        data-currency="gbp"
+        data-amounts="3,5,10"
+        data-placement="floating"
+        data-position="bottom-right"&gt;&lt;/script&gt;</pre>
+  <p>Set <code>data-position="bottom-left"</code> to move it to the other corner.</p>
+
+  <script src="/widget.js"
+          data-creator="Bilal"
+          data-currency="gbp"
+          data-amounts="3,5,10"
+          data-placement="floating"
+          data-position="bottom-right"
+          data-color="#0ea5e9"></script>
+</body>
+</html>

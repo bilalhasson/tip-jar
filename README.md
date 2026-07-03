@@ -20,10 +20,14 @@ That one tag is the entire integration.
 ## Features
 
 - **One-tag embed** — framework-agnostic vanilla JS; no build step, no dependencies on the host page.
-- **Preset + custom amounts** — configurable tip buttons plus a free-entry field.
+- **Three placements** — `inline`, a `floating` corner button, or a `modal` dialog.
+- **Shadow DOM isolation** — renders in a shadow root, so the host page's CSS can't leak in (or out).
+- **Preset + custom amounts** — configurable tip buttons plus a free-entry field (decimals supported).
+- **Themeable** — automatic light/dark, plus configurable accent colour, avatar, and title.
+- **JavaScript API** — `window.TipJar.render()/open()/close()`, multiple instances per page.
 - **Hosted Stripe Checkout** — the visitor is redirected to Stripe's own payment page.
 - **Webhook-confirmed** — tips are recorded only after a signature-verified Stripe event.
-- **Configurable via `data-` attributes** — creator name, currency, and amounts.
+- **Optional message** — visitors can leave a private note, stored with the tip.
 
 ## How it works
 
@@ -55,13 +59,67 @@ Everything runs in **Stripe test mode** — no real money.
 
 ## Configuration (widget `data-` attributes)
 
-| Attribute | Required | Default | Description |
-|---|---|---|---|
-| `src` | yes | — | URL to `widget.js`; its origin is used as the API base. |
-| `data-creator` | no | — | Name shown on the widget and attached to the tip. |
-| `data-currency` | no | `gbp` | ISO currency code (`gbp`, `usd`, `eur`, …). |
-| `data-amounts` | no | `3,5,10` | Comma-separated preset amounts (whole units). |
-| `data-api` | no | script origin | Override the backend base URL if it differs from `src`. |
+| Attribute | Default | Description |
+|---|---|---|
+| `src` | — | URL to `widget.js`; its origin is the API base by default. |
+| `data-creator` | — | Name shown on the widget and attached to the tip. |
+| `data-currency` | `gbp` | ISO currency code (`gbp`, `usd`, `eur`, …); drives `Intl` formatting. |
+| `data-amounts` | `3,5,10` | Comma-separated preset amounts (decimals allowed). |
+| `data-placement` | `inline` | `inline` · `floating` · `modal`. |
+| `data-position` | `bottom-right` | Floating only: `bottom-right` · `bottom-left`. |
+| `data-color` | `#6366f1` | Accent colour. |
+| `data-avatar` | `☕` | Emoji or image URL shown in the header. |
+| `data-title` | `Buy {creator} a coffee` | Header copy. |
+| `data-theme` | `auto` | `auto` (system) · `light` · `dark`. |
+| `data-api` | script origin | Override the backend base URL if it differs from `src`. |
+| `data-auto` | `true` | Set `false` to skip auto-init and drive the widget via the JS API. |
+
+## Placements
+
+**Inline** (default) — renders where the tag sits:
+```html
+<script src="https://tipjar.bilalhasson.com/widget.js" data-creator="Bilal"></script>
+```
+
+**Floating** — a fixed corner button that opens a popover (collapses to icon + bottom sheet on mobile):
+```html
+<script src="https://tipjar.bilalhasson.com/widget.js" data-creator="Bilal"
+        data-placement="floating" data-position="bottom-right"></script>
+```
+
+**Modal** — a trigger button that opens a focus-trapped dialog (Esc / ✕ / backdrop to close):
+```html
+<script src="https://tipjar.bilalhasson.com/widget.js" data-creator="Bilal"
+        data-placement="modal"></script>
+```
+
+## JavaScript API
+
+Load with `data-auto="false"` to skip auto-init, then drive it via `window.TipJar`:
+
+```html
+<script src="https://tipjar.bilalhasson.com/widget.js" data-auto="false"></script>
+<script>
+  // Open a modal from your own button (no built-in trigger):
+  const tip = TipJar.render({ creator: "Bilal", placement: "modal", trigger: false });
+  document.querySelector("#my-btn").onclick = () => tip.open();
+
+  // Render inline into a specific element, with its own styling:
+  TipJar.render({ placement: "inline", target: "#slot", creator: "Ada",
+                  currency: "usd", amounts: "2,4,8", avatar: "🎨", color: "#16a34a" });
+</script>
+```
+
+`TipJar.render(opts)` returns a handle with `.open()` / `.close()`. `TipJar.open()` /
+`TipJar.close()` act on the most recent instance. Multiple widgets per page are supported.
+`opts` accepts the same keys as the `data-` attributes (camelCase), plus `target`
+(CSS selector for inline mounting) and `trigger: false` (suppress the modal's trigger button).
+
+## Demos
+
+Live showcase of every placement + the API at **[/demos/](https://tipjar.bilalhasson.com/demos/)**
+(`inline`, `floating`, `modal`, `api`). The inline demo deliberately applies hostile
+host-page CSS to prove the Shadow DOM isolation holds.
 
 ## Endpoints
 
@@ -70,7 +128,8 @@ Everything runs in **Stripe test mode** — no real money.
 | `POST` | `/create-checkout-session` | Validate amount, create a Checkout Session, return its URL. |
 | `POST` | `/stripe-webhook` | Verify signature, record paid `checkout.session.completed`. |
 | `GET` | `/success`, `/cancel` | Post-payment landing pages. |
-| `GET` | `/widget.js`, `/demo.html` | The embeddable widget and a demo host page. |
+| `GET` | `/widget.js` | The embeddable widget script. |
+| `GET` | `/demos/` | Demo pages (placements + JS API). |
 | `GET` | `/healthz` | Liveness probe. |
 
 ## Tech stack
@@ -89,7 +148,9 @@ app/
   db.py            # engine + table bootstrap
   models.py        # Tip table
   tips.py          # event → recorded Tip (idempotent)
-static/            # widget.js, demo.html
+static/
+  widget.js        # the embeddable widget (Shadow DOM, all placements + API)
+  demos/           # inline / floating / modal / api demo pages
 templates/         # index / success / cancel pages
 scripts/show_tips.py   # read-only CLI to list recorded tips
 ```
@@ -122,8 +183,8 @@ PUBLIC_BASE_URL=http://localhost:8000
 uvicorn app.main:app --reload
 ```
 
-Open the demo host page at **http://localhost:8000/demo.html** — it contains
-only the one `<script>` tag, so it doubles as the integration test.
+Open **http://localhost:8000/demos/** and click through the placement + API demos.
+Each is a plain host page whose only Tip Jar code is the one `<script>` tag.
 
 ### 3. Test the webhook with the Stripe CLI
 
@@ -138,10 +199,10 @@ stripe listen --forward-to localhost:8000/stripe-webhook
 `stripe listen` prints a signing secret (`whsec_...`). Put it in `.env` as
 `STRIPE_WEBHOOK_SECRET=whsec_...` and **restart uvicorn** so it's picked up.
 
-Now trigger a real payment: on `/demo.html`, pick an amount → **Send tip** → pay
-on Stripe's page with test card **`4242 4242 4242 4242`**, any future expiry, any
-CVC/postcode. The `stripe listen` terminal should log a `200` for
-`checkout.session.completed`.
+Now trigger a real payment: on a demo page (e.g. `/demos/inline.html`), pick an
+amount → **Send tip** → pay on Stripe's page with test card
+**`4242 4242 4242 4242`**, any future expiry, any CVC/postcode. The `stripe listen`
+terminal should log a `200` for `checkout.session.completed`.
 
 > Quick synthetic alternative: `stripe trigger checkout.session.completed`
 > (the browser flow above is more faithful — it guarantees a `paid` session).
@@ -194,6 +255,6 @@ Any future expiry, any CVC, any postcode. Full list: https://docs.stripe.com/tes
 
 ## Scope
 
-Intentionally a small, finished v1. Out of scope by design: recurring
-tips/subscriptions, public tip walls, a creator dashboard/analytics UI, multiple
-accounts/auth, multi-currency switching, and saved payment methods.
+Deliberately focused. Out of scope by design: recurring tips/subscriptions,
+public tip walls, a creator dashboard/analytics UI, multiple accounts/auth, and
+saved payment methods.

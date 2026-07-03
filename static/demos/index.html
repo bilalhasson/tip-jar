@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tip Jar — demos</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 44rem; margin: 3rem auto;
+           padding: 0 1rem; line-height: 1.6; color: #1a1a1a; }
+    h1 { margin-bottom: .25rem; }
+    .sub { color: #6b7280; margin-top: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    a.card { display: block; padding: 1rem 1.1rem; border: 1px solid #e5e7eb; border-radius: 12px;
+             text-decoration: none; color: inherit; transition: border-color .12s, transform .08s; }
+    a.card:hover { border-color: #6366f1; transform: translateY(-2px); }
+    a.card b { display: block; font-size: 1.05rem; }
+    a.card span { color: #6b7280; font-size: .9rem; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 1rem 0; }
+    th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #eee; vertical-align: top; }
+    code { background: #f2f2f2; padding: .1rem .3rem; border-radius: 4px; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 10px; overflow-x: auto; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <h1>☕ Tip Jar — demos</h1>
+  <p class="sub">One <code>&lt;script&gt;</code> tag, three placements, a JS API. Each demo is a plain host page.</p>
+
+  <div class="grid">
+    <a class="card" href="/demos/inline.html"><b>Inline →</b><span>Renders where the tag sits</span></a>
+    <a class="card" href="/demos/floating.html"><b>Floating →</b><span>Fixed corner button + popover</span></a>
+    <a class="card" href="/demos/modal.html"><b>Modal →</b><span>Trigger opens a dialog</span></a>
+    <a class="card" href="/demos/api.html"><b>JS API →</b><span>render() / open() / close()</span></a>
+  </div>
+
+  <h2>The one-tag embed</h2>
+  <pre>&lt;script src="https://tipjar.bilalhasson.com/widget.js"
+        data-creator="Bilal"
+        data-currency="gbp"
+        data-amounts="3,5,10"
+        data-placement="inline"&gt;&lt;/script&gt;</pre>
+
+  <h2>Configuration (data attributes)</h2>
+  <table>
+    <tr><th>Attribute</th><th>Default</th><th>Purpose</th></tr>
+    <tr><td><code>data-creator</code></td><td>—</td><td>Name in the header + attached to the tip</td></tr>
+    <tr><td><code>data-currency</code></td><td><code>gbp</code></td><td>ISO code; drives Intl formatting</td></tr>
+    <tr><td><code>data-amounts</code></td><td><code>3,5,10</code></td><td>Preset amounts (decimals allowed)</td></tr>
+    <tr><td><code>data-placement</code></td><td><code>inline</code></td><td><code>inline</code> · <code>floating</code> · <code>modal</code></td></tr>
+    <tr><td><code>data-position</code></td><td><code>bottom-right</code></td><td>Floating only: <code>bottom-right</code>/<code>bottom-left</code></td></tr>
+    <tr><td><code>data-color</code></td><td><code>#6366f1</code></td><td>Accent colour</td></tr>
+    <tr><td><code>data-avatar</code></td><td><code>☕</code></td><td>Emoji or image URL</td></tr>
+    <tr><td><code>data-title</code></td><td>Buy {creator} a coffee</td><td>Header copy</td></tr>
+    <tr><td><code>data-theme</code></td><td><code>auto</code></td><td><code>auto</code>/<code>light</code>/<code>dark</code></td></tr>
+    <tr><td><code>data-auto</code></td><td><code>true</code></td><td>Set <code>false</code> to skip auto-init (drive via JS API)</td></tr>
+  </table>
+
+  <p style="color:#6b7280;font-size:.9rem">Test card: <code>4242 4242 4242 4242</code>, any future expiry, any CVC/postcode.</p>
+  <p><a href="/">← home</a></p>
+</body>
+</html>

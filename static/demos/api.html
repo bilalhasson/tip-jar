@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tip Jar — JS API demo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 44rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.7; color: #222; }
+    nav { font-size: .9rem; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 10px; overflow-x: auto; font-size: .82rem; }
+    .hostbtn { font: inherit; font-weight: 600; padding: .6rem 1.1rem; border: 0; border-radius: 10px;
+               background: #111827; color: #fff; cursor: pointer; }
+    .slot { margin: 1.5rem 0; }
+    h2 { margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <nav><a href="/demos/">← all demos</a></nav>
+  <h1>Programmatic API</h1>
+  <p>Load the script with <code>data-auto="false"</code> to skip auto-init, then drive it from your own code with <code>window.TipJar</code>.</p>
+
+  <h2>Open a modal from your own button</h2>
+  <button class="hostbtn" id="open-btn">Support my work ☕</button>
+  <pre>const tip = TipJar.render({ creator: "Bilal", placement: "modal", trigger: false });
+document.querySelector("#open-btn").onclick = () => tip.open();</pre>
+
+  <h2>Render inline into a specific element</h2>
+  <div class="slot" id="slot"></div>
+  <pre>TipJar.render({
+  placement: "inline", target: "#slot",
+  creator: "Ada", currency: "usd", amounts: "2,4,8",
+  avatar: "🎨", color: "#16a34a", theme: "dark"
+});</pre>
+
+  <!-- API-only: no auto-init -->
+  <script src="/widget.js" data-auto="false"></script>
+  <script>
+    // Modal instance, no auto trigger — opened by the host button above.
+    var tip = TipJar.render({ creator: "Bilal", placement: "modal", trigger: false });
+    document.getElementById("open-btn").addEventListener("click", function () { tip.open(); });
+
+    // A second, independent instance rendered into #slot with its own styling.
+    TipJar.render({
+      placement: "inline", target: "#slot",
+      creator: "Ada", currency: "usd", amounts: "2,4,8",
+      avatar: "🎨", color: "#16a34a", theme: "dark"
+    });
+  </script>
+</body>
+</html>

@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from app import config, db, stripe_client, tips
 from app.schemas import CheckoutRequest
@@ -76,11 +77,6 @@ def widget_js():
     return FileResponse(config.STATIC_DIR / "widget.js", media_type="application/javascript")
 
 
-@app.get("/demo.html", response_class=HTMLResponse)
-def demo():
-    return FileResponse(config.STATIC_DIR / "demo.html")
-
-
 @app.get("/success", response_class=HTMLResponse)
 def success():
     return FileResponse(config.TEMPLATES_DIR / "success.html")
@@ -94,3 +90,7 @@ def cancel():
 @app.get("/", response_class=HTMLResponse)
 def index():
     return FileResponse(config.TEMPLATES_DIR / "index.html")
+
+
+# Demo pages (placement + API showcases). html=True serves index.html for /demos/.
+app.mount("/demos", StaticFiles(directory=config.STATIC_DIR / "demos", html=True), name="demos")
