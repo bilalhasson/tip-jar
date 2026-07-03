@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tip Jar — demo</title>
+  <style>
+    body { font-family: Georgia, serif; max-width: 40rem; margin: 3rem auto;
+           padding: 0 1rem; line-height: 1.6; color: #222; }
+    h1 { font-family: system-ui, sans-serif; }
+    .note { color: #666; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <h1>A totally unrelated blog post</h1>
+  <p>This page pretends to be someone's website. The only Tip Jar code on it is
+     the single &lt;script&gt; tag below — everything else is the host page's own
+     markup and styling, to prove the widget doesn't clash with it.</p>
+
+  <!-- ↓↓↓ The one and only Tip Jar snippet ↓↓↓ -->
+  <script src="/widget.js"
+          data-creator="Bilal"
+          data-currency="gbp"
+          data-amounts="3,5,10"></script>
+  <!-- ↑↑↑ That's the whole integration ↑↑↑ -->
+
+  <p class="note">Test card: <code>4242 4242 4242 4242</code>, any future expiry,
+     any CVC, any postcode.</p>
+</body>
+</html>
