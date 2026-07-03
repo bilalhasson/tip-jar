@@ -19,10 +19,34 @@ from slowapi.util import get_remote_address
 from app import config, db, stripe_client, tips
 from app.schemas import CheckoutRequest
 
-# Optional error monitoring — no-op unless SENTRY_DSN is set. send_default_pii
-# stays False so request bodies / IPs are never shipped.
+
+def _scrub_event(event, hint):
+    """Strict scrubbing before an event leaves the process: drop the query string
+    (e.g. ?session_id=...) from the request context. Combined with
+    send_default_pii=False + include_local_variables=False, this keeps request
+    bodies, IPs, cookies, frame locals, and the tip message out of Sentry."""
+    req = event.get("request")
+    if isinstance(req, dict):
+        req.pop("query_string", None)
+        url = req.get("url")
+        if isinstance(url, str):
+            req["url"] = url.split("?", 1)[0]
+    return event
+
+
+# Optional error monitoring — no-op unless SENTRY_DSN is set. Strict privacy:
+# no PII, no local variables, no request body, and query strings scrubbed.
 if config.SENTRY_DSN:
-    sentry_sdk.init(dsn=config.SENTRY_DSN, environment=config.ENVIRONMENT, traces_sample_rate=0.0)
+    sentry_sdk.init(
+        dsn=config.SENTRY_DSN,
+        environment=config.ENVIRONMENT,
+        release=config.RELEASE or None,
+        traces_sample_rate=0.0,
+        send_default_pii=False,
+        include_local_variables=False,
+        max_request_body_size="never",
+        before_send=_scrub_event,
+    )
 
 stripe_client.configure()
 templates = Jinja2Templates(directory=config.TEMPLATES_DIR)
@@ -67,6 +91,15 @@ def base_url(request: Request) -> str:
 @app.get("/healthz")
 def healthz():
     return {"status": "ok"}
+
+
+# TEMPORARY: fire a test error to confirm Sentry is wired. Only exists when a DSN
+# is configured. Remove once you've seen the event land in Sentry.
+if config.SENTRY_DSN:
+
+    @app.get("/sentry-debug")
+    def sentry_debug():
+        raise RuntimeError("Sentry test error — safe to ignore; remove this route after verifying.")
 
 
 @app.post("/create-checkout-session")

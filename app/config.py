@@ -37,6 +37,9 @@ RATE_LIMIT = os.environ.get("RATE_LIMIT", "30/minute")
 # Optional Sentry error monitoring — disabled when empty.
 SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
 ENVIRONMENT = os.environ.get("RAILWAY_ENVIRONMENT_NAME", "local")
+# Release identifier for Sentry — the deployed commit (Railway injects the SHA).
+# Matches the release the CI job registers with sentry-cli (git HEAD SHA).
+RELEASE = os.environ.get("RAILWAY_GIT_COMMIT_SHA", "")
 
 # --- URLs ---
 # Absolute base used to build success/cancel URLs. Prefer an explicit override,
