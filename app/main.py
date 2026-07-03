@@ -93,15 +93,6 @@ def healthz():
     return {"status": "ok"}
 
 
-# TEMPORARY: fire a test error to confirm Sentry is wired. Only exists when a DSN
-# is configured. Remove once you've seen the event land in Sentry.
-if config.SENTRY_DSN:
-
-    @app.get("/sentry-debug")
-    def sentry_debug():
-        raise RuntimeError("Sentry test error — safe to ignore; remove this route after verifying.")
-
-
 @app.post("/create-checkout-session")
 @limiter.limit(
     lambda: config.RATE_LIMIT
