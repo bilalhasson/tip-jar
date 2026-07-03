@@ -271,3 +271,20 @@ Any future expiry, any CVC, any postcode. Full list: https://docs.stripe.com/tes
 Deliberately focused. Out of scope by design: recurring tips/subscriptions,
 public tip walls, a creator dashboard/analytics UI, multiple accounts/auth, and
 saved payment methods.
+
+## Self-hosting & single-tenant note
+
+This is a **single-tenant** app: it's wired to **one** Stripe account via the
+`STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` env vars. The hosted demo at
+`tipjar.bilalhasson.com` routes tips to the maintainer's (test-mode) Stripe
+account — **embedding that `widget.js` sends tips there, not to you.**
+
+To run your own, clone this repo, set your own Stripe keys + a Postgres
+`DATABASE_URL`, and deploy (see **Deployment**). It is intentionally **not** a
+multi-creator SaaS — supporting many creators collecting their own tips would
+require [Stripe Connect](https://docs.stripe.com/connect) plus accounts/auth,
+which is out of scope here.
+
+## License
+
+[MIT](LICENSE) © Bilal Hasson
