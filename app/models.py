@@ -1,6 +1,6 @@
 """Database models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlmodel import Field, SQLModel
 
@@ -16,4 +16,4 @@ class Tip(SQLModel, table=True):
     currency: str
     creator: str | None = None
     message: str | None = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

@@ -6,18 +6,22 @@ from sqlmodel import Session
 from app.db import engine
 from app.models import Tip
 
+# checkout.session.completed covers instant methods (cards); async_payment_succeeded
+# fires later for delayed methods, whose `completed` event arrives unpaid.
+_RECORDABLE = {"checkout.session.completed", "checkout.session.async_payment_succeeded"}
+
 
 def handle_event(event: dict) -> bool:
-    """Record a tip if the event is a completed, paid Checkout session.
+    """Record a tip if the event is a completed/settled, paid Checkout session.
 
-    Returns True if a new tip row was written, False otherwise (wrong event
+    Returns True if a new tip row was written, False otherwise (irrelevant event
     type, unpaid session, or a duplicate delivery).
     """
-    if event.get("type") != "checkout.session.completed":
+    if event.get("type") not in _RECORDABLE:
         return False
 
     session = event.get("data", {}).get("object", {})
-    # Guard against unpaid/async-pending sessions — only a paid session is a tip.
+    # Only a paid session is a tip — skips unpaid/async-pending completions.
     if session.get("payment_status") != "paid":
         return False
 

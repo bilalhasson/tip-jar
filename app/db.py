@@ -5,10 +5,11 @@ Postgres in production (Railway's DATABASE_URL), SQLite locally.
 
 from sqlmodel import SQLModel, create_engine
 
-from app import config
-
 # Import models so their tables register on SQLModel.metadata before create_all.
-from app import models  # noqa: F401
+from app import (
+    config,
+    models,  # noqa: F401
+)
 
 _url = config.DATABASE_URL or f"sqlite:///{config.BASE_DIR / 'db.sqlite3'}"
 

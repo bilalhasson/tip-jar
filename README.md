@@ -1,5 +1,7 @@
 # ☕ Tip Jar
 
+[![CI](https://github.com/bilalhasson/tip-jar/actions/workflows/ci.yml/badge.svg)](https://github.com/bilalhasson/tip-jar/actions/workflows/ci.yml)
+
 An embeddable "buy me a coffee" widget powered by **Stripe Checkout**. Drop a
 single `<script>` tag onto any website and let visitors send a one-off tip — no
 framework required on the host page.
@@ -15,7 +17,7 @@ framework required on the host page.
 
 That one tag is the entire integration.
 
-![The Tip Jar widget: preset amounts, a custom-amount field, an optional message, and a Send tip button](docs/widget.png)
+![The Tip Jar widget: preset amounts, a custom-amount field, an optional message, and a Send tip button](static/og-image.png)
 
 ## Features
 
@@ -156,6 +158,17 @@ scripts/show_tips.py   # read-only CLI to list recorded tips
 ```
 
 ## Local development & testing
+
+### Automated tests
+
+```bash
+pip install -r requirements-dev.txt
+ruff check . && ruff format --check .   # lint + format
+pytest                                  # backend: checkout, webhook, success, pages, rate limit
+npm install && npm test                 # widget: jsdom placement + API suite
+```
+
+The same checks run in **GitHub Actions** on every push/PR (`.github/workflows/ci.yml`).
 
 ### 1. Setup
 

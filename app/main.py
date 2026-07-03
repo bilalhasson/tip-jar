@@ -6,17 +6,35 @@ App setup and route handlers only. Stripe/business logic lives in
 
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 from app import config, db, stripe_client, tips
 from app.schemas import CheckoutRequest
 
+# Optional error monitoring — no-op unless SENTRY_DSN is set. send_default_pii
+# stays False so request bodies / IPs are never shipped.
+if config.SENTRY_DSN:
+    sentry_sdk.init(dsn=config.SENTRY_DSN, environment=config.ENVIRONMENT, traces_sample_rate=0.0)
+
 stripe_client.configure()
 templates = Jinja2Templates(directory=config.TEMPLATES_DIR)
+
+
+def client_ip(request: Request) -> str:
+    """Real client IP — Railway sits behind a proxy, so prefer X-Forwarded-For."""
+    xff = request.headers.get("x-forwarded-for")
+    return xff.split(",")[0].strip() if xff else get_remote_address(request)
+
+
+limiter = Limiter(key_func=client_ip)
 
 
 @asynccontextmanager
@@ -26,6 +44,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Tip Jar", docs_url=None, redoc_url=None, lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # The widget is embedded on arbitrary third-party sites, so the browser makes a
 # cross-origin POST to /create-checkout-session. No cookies/credentials are used,
@@ -50,15 +70,18 @@ def healthz():
 
 
 @app.post("/create-checkout-session")
+@limiter.limit(
+    lambda: config.RATE_LIMIT
+)  # callable → re-read per request (and overridable in tests)
 def create_checkout_session(req: CheckoutRequest, request: Request):
     try:
         url = stripe_client.create_checkout_session(
             req.amount, req.creator, req.message, base_url(request)
         )
     except stripe_client.InvalidAmount as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    except stripe_client.CheckoutError:
-        raise HTTPException(status_code=502, detail="Could not create checkout session.")
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except stripe_client.CheckoutError as exc:
+        raise HTTPException(status_code=502, detail="Could not create checkout session.") from exc
     return {"url": url}
 
 
@@ -68,8 +91,8 @@ async def stripe_webhook(request: Request):
     sig = request.headers.get("stripe-signature", "")
     try:
         event = stripe_client.construct_webhook_event(payload, sig)
-    except stripe_client.InvalidSignature:
-        raise HTTPException(status_code=400, detail="Invalid signature")
+    except stripe_client.InvalidSignature as exc:
+        raise HTTPException(status_code=400, detail="Invalid signature") from exc
     tips.handle_event(event)
     return {"received": True}  # ack promptly; the webhook is the source of truth
 

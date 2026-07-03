@@ -1,0 +1,11 @@
+{
+  "name": "tip-jar-widget",
+  "private": true,
+  "description": "Dev tooling for the embeddable widget (jsdom tests).",
+  "scripts": {
+    "test": "node tests/widget.test.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

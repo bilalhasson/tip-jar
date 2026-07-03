@@ -81,7 +81,7 @@ _SYMBOLS = {"gbp": "£", "usd": "$", "eur": "€"}
 
 def _format_money(minor: int, currency: str) -> str:
     prefix = _SYMBOLS.get(currency, (currency or "").upper() + " ")
-    return prefix + "{:,.2f}".format(minor / 100)
+    return prefix + f"{minor / 100:,.2f}"
 
 
 def get_checkout_summary(session_id: str | None) -> dict | None:
@@ -101,7 +101,9 @@ def get_checkout_summary(session_id: str | None) -> dict | None:
         return None
     meta = getattr(s, "metadata", None)
     return {
-        "amount_display": _format_money(getattr(s, "amount_total", 0) or 0, getattr(s, "currency", "")),
+        "amount_display": _format_money(
+            getattr(s, "amount_total", 0) or 0, getattr(s, "currency", "")
+        ),
         "creator": (getattr(meta, "creator", "") if meta else "") or "",
     }
 

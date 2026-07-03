@@ -31,6 +31,13 @@ CURRENCY = os.environ.get("CURRENCY", "gbp").lower()
 MIN_TIP = int(os.environ.get("MIN_TIP", "1"))
 MAX_TIP = int(os.environ.get("MAX_TIP", "500"))
 
+# --- Ops ---
+# Per-IP rate limit for the public checkout endpoint (slowapi syntax).
+RATE_LIMIT = os.environ.get("RATE_LIMIT", "30/minute")
+# Optional Sentry error monitoring — disabled when empty.
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+ENVIRONMENT = os.environ.get("RAILWAY_ENVIRONMENT_NAME", "local")
+
 # --- URLs ---
 # Absolute base used to build success/cancel URLs. Prefer an explicit override,
 # then Railway's injected public domain, else fall back to the request's own

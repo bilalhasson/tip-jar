@@ -29,5 +29,9 @@ db.sqlite3-journal
 .DS_Store
 Thumbs.db
 
+# Node (widget dev tooling)
+node_modules/
+package-lock.json
+
 # Claude
 .claude
