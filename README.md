@@ -15,6 +15,8 @@ framework required on the host page.
 
 That one tag is the entire integration.
 
+![The Tip Jar widget: preset amounts, a custom-amount field, an optional message, and a Send tip button](docs/widget.png)
+
 ## Features
 
 - **One-tag embed** — framework-agnostic vanilla JS; no build step, no dependencies on the host page.
